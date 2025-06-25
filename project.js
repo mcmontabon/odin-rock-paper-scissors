@@ -1,96 +1,92 @@
-// Step 2: Function to get computer's choice
-function getComputerChoice() {
-	// Math.random() returns a number between 0 (inclusive) and 1 (exclusive)
-	// Multiply by 3 to get a number between 0 and 2.999..., then use Math.floor to get 0, 1, or 2
-	const randomNum = Math.floor(Math.random() * 3);
-	if (randomNum === 0) {
-		return 'rock';
-	} else if (randomNum === 1) {
-		return 'paper';
-	} else {
-		return 'scissors';
-	}
-}
+// --- DOM SETUP ---
+// Create buttons and result display elements
+const choices = ['rock', 'paper', 'scissors'];
+const container = document.createElement('div');
+container.id = 'game-container';
 
-// Step 3: Function to get human's choice
-function getHumanChoice() {
-	// prompt() asks the user for input (works in browser, not in Node.js)
-	// We use .toLowerCase() to make the input case-insensitive
-	const choice = prompt('Enter rock, paper, or scissors:').toLowerCase();
-	return choice;
-}
+const resultDiv = document.createElement('div');
+resultDiv.id = 'result';
+container.appendChild(resultDiv);
 
-// Step 4: Score variables (global scope)
+const scoreDiv = document.createElement('div');
+scoreDiv.id = 'score';
+container.appendChild(scoreDiv);
+
+choices.forEach((choice) => {
+	const btn = document.createElement('button');
+	btn.textContent = choice.charAt(0).toUpperCase() + choice.slice(1);
+	btn.addEventListener('click', () => playRound(choice, getComputerChoice()));
+	container.appendChild(btn);
+});
+
+document.body.appendChild(container);
+
+// --- GAME LOGIC ---
+
 let humanScore = 0;
 let computerScore = 0;
+let gameOver = false;
 
-// Step 5: Function to play a single round
+// Randomly returns 'rock', 'paper', or 'scissors'
+function getComputerChoice() {
+	const randomNum = Math.floor(Math.random() * 3);
+	if (randomNum === 0) return 'rock';
+	if (randomNum === 1) return 'paper';
+	return 'scissors';
+}
+
+// Play a single round and update the DOM
 function playRound(humanChoice, computerChoice) {
-	// Make humanChoice case-insensitive
-	const human = humanChoice.toLowerCase();
-	const computer = computerChoice.toLowerCase();
+	if (gameOver) return; // Stop if game is over
 
-	// Check for a tie
-	if (human === computer) {
-		console.log(`It's a tie! Both chose ${human}.`);
-		return;
-	}
-
-	// Check all win/lose conditions
-	if (
-		(human === 'rock' && computer === 'scissors') ||
-		(human === 'paper' && computer === 'rock') ||
-		(human === 'scissors' && computer === 'paper')
+	let roundResult = '';
+	if (humanChoice === computerChoice) {
+		roundResult = `It's a tie! Both chose ${humanChoice}.`;
+	} else if (
+		(humanChoice === 'rock' && computerChoice === 'scissors') ||
+		(humanChoice === 'paper' && computerChoice === 'rock') ||
+		(humanChoice === 'scissors' && computerChoice === 'paper')
 	) {
 		humanScore++;
-		console.log(
-			`You win! ${human.charAt(0).toUpperCase() + human.slice(1)} beats ${computer}.`
-		);
+		roundResult = `You win! ${capitalize(humanChoice)} beats ${computerChoice}.`;
 	} else {
 		computerScore++;
-		console.log(
-			`You lose! ${computer.charAt(0).toUpperCase() + computer.slice(1)} beats ${human}.`
-		);
+		roundResult = `You lose! ${capitalize(computerChoice)} beats ${humanChoice}.`;
+	}
+
+	updateDisplay(roundResult);
+
+	// Check for winner
+	if (humanScore === 5 || computerScore === 5) {
+		gameOver = true;
+		if (humanScore > computerScore) {
+			updateDisplay('Congratulations! You won the game!', true);
+		} else {
+			updateDisplay('Sorry, you lost the game.', true);
+		}
 	}
 }
 
-// Step 6: Function to play the whole game (5 rounds)
-function playGame() {
-	// Reset scores at the start of the game
-	humanScore = 0;
-	computerScore = 0;
-
-	// Play 5 rounds
-	for (let round = 1; round <= 5; round++) {
-		console.log(`--- Round ${round} ---`);
-		const humanSelection = getHumanChoice();
-		const computerSelection = getComputerChoice();
-		playRound(humanSelection, computerSelection);
-		console.log(`Score: Human ${humanScore} - Computer ${computerScore}`);
-	}
-
-	// Announce the final winner
-	console.log('--- Game Over ---');
-	if (humanScore > computerScore) {
-		console.log('Congratulations! You won the game!');
-	} else if (computerScore > humanScore) {
-		console.log('Sorry, you lost the game.');
-	} else {
-		console.log("It's a tie game!");
+// Helper to update the result and score display
+function updateDisplay(message, isFinal = false) {
+	resultDiv.textContent = message;
+	scoreDiv.textContent = `Score: Human ${humanScore} - Computer ${computerScore}`;
+	if (isFinal) {
+		// Optionally, disable buttons or show a reset button here
+		const buttons = container.querySelectorAll('button');
+		buttons.forEach((btn) => (btn.disabled = true));
 	}
 }
 
-// Start the game
-playGame();
+// Helper to capitalize first letter
+function capitalize(str) {
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 /*
   --- EXPLANATION OF TOPICS ---
-  - Functions: Blocks of code that perform a task. We use them to organize our logic.
-  - Variables: Store data (like scores or choices).
-  - Math.random(): Generates random numbers.
-  - prompt(): Gets user input (browser only).
-  - if/else: Used to make decisions in code.
-  - for loop: Repeats code multiple times (for 5 rounds).
-  - String methods: .toLowerCase() makes input case-insensitive.
-  - console.log(): Prints messages to the console for feedback.
+  - DOM manipulation: Creating and updating HTML elements with JavaScript.
+  - Event listeners: Reacting to user clicks.
+  - Refactoring: Changing code structure to fit new requirements.
+  - Game state: Using variables to track scores and game over.
 */
